@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block js %}
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% endblock %}
+
+{% block main %}
+
+<style type="text/css">
+    .imgborder{
+    
+        border-color: #428bca;
+    }
+</style>
+
+{% include "navbar2.html" %}
+
+<div class="container">
+<div data-ng-app="wishlistApp" >
+    {% raw %}
+        <div data-ng-controller="addToWishlistCtrl">
+            <h2>Keep those wishes coming</h3>
+            <hr>
+            <form role="form">
+                <div class="form-group">
+                    <label for="itemUrl">Enter the URL for the item you want to add to your wishlist</label>
+                    <div class="input-group">
+                        <input class="form-control" type="text" name="itemUrl" data-ng-model="itemUrl" placeholder="URL" maxlength="500"/>
+                        <span class="input-group-btn">
+                            <button type="button" data-ng-click="getItemInfo()" class="btn btn-primary">{{ button }}</button>
+                        </span>
+                    </div>
+                </div>
+                <label for="">{{ imgInstruct }}</label>
+                <div class="row" >
+                    <div data-ng-repeat="image in images track by $index" class="col-lg-3 col-md-4 col-xs-6">
+                        <div class = "thumbnail" style="height:250px;width:250px" data-ng-class="{imgborder : $index == row}">
+                            <img data-ng-src="{{ image }}" data-ng-click="getImgUrl($index)" style="max-height:100%;max-width:100%">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <input class="form-control" type="text" name="itemUrl" data-ng-model="title" placeholder="Title" maxlength="60"/>
+                </div>
+                <div class="form-group" >
+                    <textarea class="form-control" rows="5" type="text" name="itemUrl" data-ng-model="descript" placeholder="Description" maxlength="500"> </textarea>
+                </div>
+                <button type="button" data-ng-click="addItemInfo()" class="btn btn-primary">Add to Wishlist</button>
+                
+            </form>
+        </div>
+    {% endraw %}
+</div>
+</div>
+{% endblock %}
+

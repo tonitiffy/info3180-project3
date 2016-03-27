@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block js %}
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% endblock %}
+
+{% block css %}
+{% endblock %}
+    
+{% block main %}
+
+{% include "navbar2.html" %}
+
+<div class="container">
+    <h2>Your Wishes</h3>
+    <p>
+        <a href="{{ url_for('addtowishlist') }}" class="btn btn-default btn-md" role="button"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> Add Item</a>
+        <a href="{{ url_for('share') }}" class="btn btn-default btn-md" role="button"><span class="glyphicon glyphicon-envelope" aria-hidden="true"></span> Share</a>
+    </p>
+    <hr>
+    <div data-ng-app="wishlistApp" >
+        {% raw %}
+            <div data-ng-controller="wishlistCtrl">
+                
+                <div class="row">
+                    <div data-ng-repeat="item in items track by $index" class="col-lg-3 col-md-4 col-sm-6">
+                        
+                        <div class="thumbnail" style="height:600px;width:260px">
+                            <div  style="height:250px;width:250px">
+                            <a href="{{ item.itemUrl }}" >
+                                <img data-ng-src="{{ item.imgUrl }}" style="max-height:100%;max-width:100%">
+                            </a>
+                            </div>
+                            <div class="caption">
+                                <a href="{{ item.itemUrl }}" > <h4>{{ item.title }}</h4> </a>
+                                <p>{{ item.description }}</p>
+                                <p><a href="#" class="btn btn-danger" role="button" data-ng-click="deleteItem($index)">Delete</a></p>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+        {% endraw %}
+    </div>
+</div>
+
+{% endblock %}

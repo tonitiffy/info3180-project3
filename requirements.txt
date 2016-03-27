@@ -2,7 +2,14 @@
 # Flask
 # ----------------------
 flask
-
+Flask-Login
+Flask-Migrate
+Flask-Script
+Flask-SQLAlchemy
+Flask-WTF
+beautifulsoup4
+requests
+psycopg2
 
 # ----------------------
 # Testing
