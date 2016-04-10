@@ -1,0 +1,8 @@
+body{
+    background-color: #DB7093;
+}
+#wish-header{
+    background-image: url("/static/img/header.jpg");
+    padding-left: 10px;
+    padding-top: 5px;
+}
