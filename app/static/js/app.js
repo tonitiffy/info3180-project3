@@ -195,6 +195,7 @@ var app = angular.module('wishlistApp', ['ngRoute', 'ui.bootstrap', 'ngAnimate']
    
 })
 .controller('shareController', function ($scope, $http, $location, $rootScope) {
+    $rootScope.alerts = [];
     $scope.param = $routeParams.id;
     
     $scope.share = function () {
