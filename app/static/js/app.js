@@ -108,8 +108,9 @@ var app = angular.module('wishlistApp', ['ngRoute', 'ui.bootstrap', 'ngAnimate']
                 $rootScope.userid = response['data']['data']['user']['_id'];
                 var headers = {"Authorization": "Bearer " + localStorage.token};
                 $http.get('/api/user/'+$rootScope.userid+'/wishlist', {headers:headers})
-                .then(function(data){
-                        $scope.items = data['data']['wishes'];
+                .then(function(response){
+                        $scope.items = response['data']['data']['wishes'];
+                        console.log($scope.items);
                         $scope.alerts = $rootScope.alerts;
                         $scope.closeAlert = function(index) {$scope.alerts.splice(index, 1);};
                     });
@@ -122,7 +123,7 @@ var app = angular.module('wishlistApp', ['ngRoute', 'ui.bootstrap', 'ngAnimate']
     }
     
 })
-.controller('addController', function ($scope, $http, $rootScope, $location) {
+.controller('addController', function ($scope, $http, $routeParams, $rootScope, $location) {
     $rootScope.alerts = [];
     $scope.param = $routeParams.id;
     $scope.button = "Get Details";
