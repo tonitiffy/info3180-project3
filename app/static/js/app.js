@@ -176,10 +176,10 @@ var app = angular.module('wishlistApp', ['ngRoute', 'ui.bootstrap', 'ngAnimate']
                         
                         if (response['data']['error'] == null){
                             $location.path('/wishlist');
-                            $rootScope.alerts = [{ type: 'success', msg: response['data']['data']['message'] }];
+                            $rootScope.alerts = [{ type: 'success', msg: response['data']['message'] }];
                         }
                         else{
-                            $scope.alerts = [{ type: 'danger', msg: response['data']['data']['message'] }];
+                            $scope.alerts = [{ type: 'danger', msg: response['data']['message'] }];
                             $scope.closeAlert = function(index) {$scope.alerts.splice(index, 1);};
                             $scope.addButton = "Add Wish";
                         }
