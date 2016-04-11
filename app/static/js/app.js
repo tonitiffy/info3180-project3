@@ -110,7 +110,6 @@ var app = angular.module('wishlistApp', ['ngRoute', 'ui.bootstrap', 'ngAnimate']
                 $http.get('/api/user/'+$rootScope.userid+'/wishlist', {headers:headers})
                 .then(function(response){
                         $scope.items = response['data']['data']['wishes'];
-                        console.log($scope.items);
                         $scope.alerts = $rootScope.alerts;
                         $scope.closeAlert = function(index) {$scope.alerts.splice(index, 1);};
                     });
@@ -194,7 +193,7 @@ var app = angular.module('wishlistApp', ['ngRoute', 'ui.bootstrap', 'ngAnimate']
     };
    
 })
-.controller('shareController', function ($scope, $http, $location, $rootScope) {
+.controller('shareController', function ($scope, $http, $routeParams, $location, $rootScope) {
     $rootScope.alerts = [];
     $scope.param = $routeParams.id;
     
