@@ -1,16 +1,7 @@
 var app = angular.module('wishlistApp', ['ngRoute', 'ui.bootstrap', 'ngAnimate'])
 
-.run(function($rootScope, $location, $http) {
+.run(function($rootScope, $location) {
     $rootScope.alerts = [];
-    if (localStorage.token != null){
-        $http({
-        method: 'GET',
-        url: '/api/user',
-        headers: {'Authorization': 'Bearer ' + localStorage.token}
-        }).then(function(response) {
-            console.log(response);
-        });
-    }
 })
 .config(function($routeProvider){
     $routeProvider
@@ -59,81 +50,98 @@ var app = angular.module('wishlistApp', ['ngRoute', 'ui.bootstrap', 'ngAnimate']
         data: $.param({email: $scope.login.email, password: $scope.login.password}),
         headers: {'content-type': 'application/x-www-form-urlencoded'}
         })
-        .then(function(data, response) {
-            
-            if (data['data']['error'] == null){
-                console.log(data['data']['data']['token']);
-                $rootScope.loggedInUser = data['data']['data']['user']['_id'];
-                localStorage.token = data['data']['data']['token'];
-                $location.path('/user/'+$rootScope.loggedInUser+'/wishlist');
+        .then(function(response) {
+            if (response['data']['error'] == null){
+                localStorage.token = response['data']['data']['token'];
+                $rootScope.userid = response['data']['data']['user']['_id'];
+                $location.path('/wishlist');
             }
             else{
-                $scope.alerts = [{ type: 'danger', msg: data['data']['message'] }];
+                $scope.alerts = [{ type: 'danger', msg: response['data']['message'] }];
                 $scope.closeAlert = function(index) {$scope.alerts.splice(index, 1);};
-                console.log(data['data']['message']);
+                
             }
         });
     };
 })
 .controller('logoutController', function ($location, $rootScope){
     localStorage.removeItem('token');
-    $rootScope.loggedInUser = null;
-    $location.path('/');
+    $rootScope.userid = null;
+    $location.path('/login');
 })
 .controller('registerController', function ($scope, $http, $location, $rootScope) {
     
     $scope.register = function () {
-        var headers_ = {'content-type': 'application/x-www-form-urlencoded'};
+        
         $http({
         url: '/api/user/register',
         method: "POST",
         data: $.param({name: $scope.reg.name, email: $scope.reg.email, password: $scope.reg.password}),
-        headers: headers_
+        headers: {'content-type': 'application/x-www-form-urlencoded'}
         })
-        .then(function(data) {
-            if (data['error'] == null){
-                console.log(data['data']['data']['token']);
-                localStorage.token = data['data']['data']['token'];
-                $location.path('/user/'+$rootScope.loggedInUser+'/wishlist');
+        .then(function(response) {
+            if (response['data']['error'] == null){
+                localStorage.token = response['data']['data']['token'];
+                $rootScope.userid = response['data']['data']['user']['_id'];
+                $location.path('/wishlist');
             }
             else{
-                console.log(data['message']);
+                $scope.alerts = [{ type: 'danger', msg: response['data']['message'] }];
+                $scope.closeAlert = function(index) {$scope.alerts.splice(index, 1);};
             }
         });
         
     };
    
 })
-.controller('wishlistController', function ($scope, $http, $rootScope) {
-    $scope.items = [];
-    var headers = {"Authorization": "Bearer " + localStorage.token};
-    $http.get('/api/user/'+$rootScope.loggedInUser+'/wishlist', {headers:headers})
-    .success(function(data){
-            $scope.items = data['data']['wishes'];
-            console.log($scope.items);
-            $scope.alerts = $rootScope.alerts;
-            $scope.closeAlert = function(index) {$scope.alerts.splice(index, 1);};
+.controller('wishlistController', function ($scope, $http, $rootScope, $location) {
+    
+    if (localStorage.token != null){
+        $http({
+        url: '/api/user',
+        method: "GET",
+        headers: {'Authorization': 'Bearer '+ localStorage.token}
+        })
+        .then(function(response) {
+            if (response['data']['error'] == null){
+                
+                $rootScope.userid = response['data']['data']['user']['_id'];
+                var headers = {"Authorization": "Bearer " + localStorage.token};
+                $http.get('/api/user/'+$rootScope.userid+'/wishlist', {headers:headers})
+                .then(function(data){
+                        $scope.items = data['data']['wishes'];
+                        $scope.alerts = $rootScope.alerts;
+                        $scope.closeAlert = function(index) {$scope.alerts.splice(index, 1);};
+                    });
+            }
+        }, function () {
+            $location.path('/login');
         });
+    }else{
+        $location.path('/login');
+    }
+    
 })
-.controller('addController', function ($scope, $http, $routeParams, $rootScope, $location) {
+.controller('addController', function ($scope, $http, $rootScope, $location) {
+    $rootScope.alerts = [];
     $scope.param = $routeParams.id;
     $scope.button = "Get Details";
     $scope.addButton = "Add Wish";
+    
     $scope.getDetails = function () {
         $scope.button = "Getting the details...";
-        var headers = {"Authorization": "Bearer " + localStorage.token};
-        $http.get('/api/thumbnail/process',{params:{"url": $scope.url}}, {headers:headers})
-            .success(function(data) {
-                console.log(data['error']);
-                if (data['error'] == null){
+        $http.get('/api/thumbnail/process',{params:{"url": $scope.url}})
+            .then(function(response) {
+                
+                if (response['data']['error'] == null){
                     $scope.alerts = [];
-                    $scope.title = data['data']['title'];
-                    $scope.thumbnails = data['data']['thumbnails'];
+                    $scope.title = response['data']['data']['title'];
+                    $scope.thumbnails = response['data']['data']['thumbnails'];
                     $scope.imgInstruct= "Select an image";
                     $scope.button = "Get Details";
                 }
                 else{
-                    $scope.alerts = [{ type: 'danger', msg: data['message'] }];
+                    $scope.alerts = [{ type: 'danger', msg: response['data']['message'] }];
                     $scope.closeAlert = function(index) {$scope.alerts.splice(index, 1);};
                     $scope.thumbnails = [];
                     $scope.title = "";
@@ -143,85 +151,90 @@ var app = angular.module('wishlistApp', ['ngRoute', 'ui.bootstrap', 'ngAnimate']
             });
    };
    $scope.getThumbnail = function (index) {
-        console.log(index);
         $scope.thumbnail = $scope.thumbnails[index];
         $scope.row = index;
    };
     $scope.add = function () {
         $scope.addButton = "Adding your wish...";
-        console.log($scope.url);
-        console.log($scope.thumbnail);
-        console.log($scope.title);
-        console.log($scope.descript);
-        var headers = {'content-type': 'application/x-www-form-urlencoded', 'Authorization': 'Bearer ' + localStorage.token};
-        $http({
-        url: '/api/user/'+$rootScope.loggedInUser+'/wishlist',
-        method: "POST",
-        data: $.param({title: $scope.title, description: $scope.descript, url: $scope.url, thumbnail: $scope.thumbnail}),
-        headers: headers
-        })
-        .then(function(response) {
-            console.log(response['data']);
-            if (response['data']['error'] == null){
-                $location.path('/user/'+$rootScope.loggedInUser+'/wishlist');
-                $rootScope.alerts = [{ type: 'success', msg: response['data']['message'] }];
-            }
-            else{
-                $scope.alerts = [{ type: 'danger', msg: response['data']['message'] }];
-                $scope.closeAlert = function(index) {$scope.alerts.splice(index, 1);};
-                console.log(response['data']['message']);
-                $scope.addButton = "Add Wish";
-            }
-            $location.path('/user/'+$rootScope.loggedInUser+'/wishlist');
-        });
+        if (localStorage.token != null){
+            $http({
+            url: '/api/user',
+            method: "GET",
+            headers: {'Authorization': 'Bearer '+ localStorage.token}
+            })
+            .then(function(response) {
+                if (response['data']['error'] == null){
+                    
+                    $rootScope.userid = response['data']['data']['user']['_id'];
+                    $http({
+                    url: '/api/user/'+$rootScope.userid+'/wishlist',
+                    method: "POST",
+                    data: $.param({title: $scope.title, description: $scope.descript, url: $scope.url, thumbnail: $scope.thumbnail}),
+                    headers: {'content-type': 'application/x-www-form-urlencoded', 'Authorization': 'Bearer ' + localStorage.token}
+                    })
+                    .then(function(response) {
+                        
+                        if (response['data']['error'] == null){
+                            $location.path('/wishlist');
+                            $rootScope.alerts = [{ type: 'success', msg: response['data']['message'] }];
+                        }
+                        else{
+                            $scope.alerts = [{ type: 'danger', msg: response['data']['message'] }];
+                            $scope.closeAlert = function(index) {$scope.alerts.splice(index, 1);};
+                            $scope.addButton = "Add Wish";
+                        }
+                        $location.path('/wishlist');
+                    });
+                }
+            }, function () {
+                $location.path('/login');
+            });
+        }
     };
    
 })
-.controller('shareController', function ($scope, $http, $routeParams, $location, $rootScope) {
+.controller('shareController', function ($scope, $http, $location, $rootScope) {
     $scope.param = $routeParams.id;
     
     $scope.share = function () {
-        console.log($scope.email1);
-        console.log($scope.email2);
-        console.log($scope.email3);
-        console.log($scope.email4);
-        console.log($scope.email5);
         
-        var headers = {'content-type': 'application/x-www-form-urlencoded', 'Authorization': 'Bearer ' + localStorage.token};
-        $http({
-        url: '/api/user/'+$rootScope.loggedInUser+'/wishlist/share',
-        method: "POST",
-        data: $.param({email1: $scope.email1, email2: $scope.email2, email3: $scope.email3, email4: $scope.email4, email5: $scope.email5}),
-        headers: headers
-        })
-        .then(function(response) {
-            console.log(response['data']);
-            console.log("Wishlist sent");
-            $location.path('/user/'+$rootScope.loggedInUser+'/wishlist');
-        });
+        if (localStorage.token != null){
+            $http({
+            url: '/api/user',
+            method: "GET",
+            headers: {'Authorization': 'Bearer '+ localStorage.token}
+            })
+            .then(function(response) {
+                if (response['data']['error'] == null){
+                    
+                    $rootScope.userid = response['data']['data']['user']['_id'];
+                    $http({
+                    url: '/api/user/'+$rootScope.userid+'/wishlist/share',
+                    method: "POST",
+                    data: $.param({email1: $scope.email1, email2: $scope.email2, email3: $scope.email3, email4: $scope.email4, email5: $scope.email5}),
+                    headers: {'content-type': 'application/x-www-form-urlencoded', 'Authorization': 'Bearer ' + localStorage.token}
+                    })
+                    .then(function(response) {
+                        $location.path('/wishlist');
+                    });
+                }
+            }, function () {
+                $location.path('/login');
+            });
+        }
     };
 })
-.controller('sharedViewController', function ($scope, $http, $routeParams, $location, $rootScope) {
-    $scope.param = $routeParams.id;
+.controller('sharedViewController', function ($scope, $http, $routeParams, $location) {
     
-    $scope.share = function () {
-        console.log($scope.email1);
-        console.log($scope.email2);
-        console.log($scope.email3);
-        console.log($scope.email4);
-        console.log($scope.email5);
-        
-        var headers = {'content-type': 'application/x-www-form-urlencoded', 'Authorization': 'Bearer ' + localStorage.token};
-        $http({
-        url: '/api/user/'+$rootScope.loggedInUser+'/wishlist/share',
-        method: "POST",
-        data: $.param({email1: $scope.email1, email2: $scope.email2, email3: $scope.email3, email4: $scope.email4, email5: $scope.email5}),
-        headers: headers
-        })
-        .then(function(response) {
-            console.log(response['data']);
-            console.log("Wishlist sent");
-            $location.path('/user/'+$rootScope.loggedInUser+'/wishlist');
+    $http.get('/api/user/'+$routeParams.id+'/wishlist/shared')
+    .then(function(response){
+        if (response['data']['errors'] == null){
+            $scope.items = response['data']['wishes'];
+            $scope.name = response['data']['user']['name'];
+            $scope.closeAlert = function(index) {$scope.alerts.splice(index, 1);};
+        }else{
+            
+        }
+            $location.path('/');   
         });
-    };
 });

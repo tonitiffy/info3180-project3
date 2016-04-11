@@ -6,8 +6,8 @@
 </style>
 
 <div class="container">
-    <div id="wish-header">
-        <div class="page-header">
+    <div class="wish-header">
+        <div>
             <h1>Keep those wishes coming</h1>
         </div>
     </div>
@@ -18,7 +18,7 @@
                 <div class="form-group">
                     <label for="url">Enter the URL for the item you want to add to your wishlist</label>
                     <div class="input-group">
-                        <input class="form-control" type="text" name="url" data-ng-model="url" placeholder="URL" maxlength="500"/>
+                        <input class="form-control" type="url" name="url" data-ng-model="url" placeholder="URL" maxlength="500" required autofocus/>
                         <span class="input-group-btn">
                             <button type="button" data-ng-click="getDetails()" class="btn btn-info">{{ button }}</button>
                         </span>

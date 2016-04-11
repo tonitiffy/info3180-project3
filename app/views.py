@@ -48,7 +48,7 @@ def requires_auth(f):
     token = parts[1]
     try:
          payload = jwt.decode(token, 'listen-this-is-a-secret-so-do-not-say-anything')
-  
+         g.current_user = payload
     except jwt.ExpiredSignature:
         return authenticate({'code': 'token_expired', 'description': 'token is expired'})
     except jwt.DecodeError:
@@ -93,7 +93,6 @@ def new_user():
     response['data']['expires'] = datetime.utcnow() + timedelta(days=1)
     response['data']['user']    = {"_id":user.id, "email":email, "name":name}
     response['message'] = "Success"
-    g.current_user = user.id
     
     return jsonify(response)
     
@@ -122,7 +121,6 @@ def login():
         response['data']['expires'] = datetime.utcnow() + timedelta(days=1)
         response['data']['user']    = {"_id":user.id, "email":email, "name":user.name}
         response['message']         = "Success"
-        g.current_user = user.id
         
         return jsonify(response)
     
@@ -131,7 +129,13 @@ def login():
 @app.route('/api/user', methods=['GET'])
 @requires_auth
 def get_user():
-    return g.current_user
+    response = {}
+    response['error']           = None
+    response['data']            = {}
+    response['data']['user']    = g.current_user
+    response['message']         = "Success"
+    
+    return jsonify(response)
 
 @app.route('/api/user/<int:id>/wishlist', methods=['POST','GET'])
 @cross_origin(headers=['Content-Type', 'Authorization'])
@@ -197,7 +201,7 @@ def share(id):
     
     for email in emails:
         if email:
-            emailscript.sendemail("Friend",email,"{} just shared a wishlist!".format(user.name),"Find the wishlist here.\nhttps://wishlist-tonitiffy-1.c9users.io/#/user/{}/wishlist".format(id)) 
+            emailscript.sendemail("Friend",email,"{} just shared a wishlist!".format(user.name),"Find the wishlist here.\nhttps://wishlist-tonitiffy-1.c9users.io/#/user/{}/wishlist/shared_view".format(id)) 
     response = {}
     response['error']           = None
     response['data']            = {}
@@ -205,9 +209,31 @@ def share(id):
     response['message']         = "Wishes shared with friends and family!"
     return jsonify(response)
     
+    
+@app.route('/api/user/<int:id>/wishlist/shared', methods=['GET'])
+@cross_origin(headers=['Content-Type', 'Authorization'])
+def shared(id):
+    user = db.session.query(User).filter_by(id = id).first()
+    wishlistItems = db.session.query(Wishlist).filter_by(userid=id).all()
+    if wishlistItems is None or user is None:
+        return jsonify({"errors":1, "data":{}, "message":"No such wishlist exist."})
+    
+    wishes = []    
+    for wish in wishlistItems:
+        wishes.append({"title":wish.title, "description":wish.description, "url":wish.url, "thumbnail":wish.thumbnail})
+    
+    response = {}
+    response['error']                   = None
+    response['data']                    = {}
+    response['data']['wishes']          = wishes
+    response['data']['user']            = {}
+    response['data']['user']['name']    = user.name
+    response['message']                 = "Success"
+    return jsonify(response)    
+    
 @app.route('/api/thumbnail/process',methods=['GET'])
 @cross_origin(headers=['Content-Type', 'Authorization'])
-@requires_auth
 def processThumbnail():
     url = request.args.get('url')
-    return jsonify(thumbnailer.get_data(url))
+    response = thumbnailer.get_data(url)
+    return jsonify(response)
