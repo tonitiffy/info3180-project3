@@ -163,7 +163,7 @@ var app = angular.module('wishlistApp', ['ngRoute', 'ui.bootstrap', 'ngAnimate']
             headers: {'Authorization': 'Bearer '+ localStorage.token}
             })
             .then(function(response) {
-                if (response['data']['error'] == null){
+                if (response['data']['data']['error'] == null){
                     
                     $rootScope.userid = response['data']['data']['user']['_id'];
                     $http({
@@ -176,14 +176,13 @@ var app = angular.module('wishlistApp', ['ngRoute', 'ui.bootstrap', 'ngAnimate']
                         
                         if (response['data']['error'] == null){
                             $location.path('/wishlist');
-                            $rootScope.alerts = [{ type: 'success', msg: response['data']['message'] }];
+                            $rootScope.alerts = [{ type: 'success', msg: response['data']['data']['message'] }];
                         }
                         else{
-                            $scope.alerts = [{ type: 'danger', msg: response['data']['message'] }];
+                            $scope.alerts = [{ type: 'danger', msg: response['data']['data']['message'] }];
                             $scope.closeAlert = function(index) {$scope.alerts.splice(index, 1);};
                             $scope.addButton = "Add Wish";
                         }
-                        $location.path('/wishlist');
                     });
                 }
             }, function () {
@@ -217,6 +216,7 @@ var app = angular.module('wishlistApp', ['ngRoute', 'ui.bootstrap', 'ngAnimate']
                     })
                     .then(function(response) {
                         $location.path('/wishlist');
+                        $rootScope.alerts = [{ type: 'success', msg: response['data']['message'] }];
                     });
                 }
             }, function () {
@@ -229,13 +229,11 @@ var app = angular.module('wishlistApp', ['ngRoute', 'ui.bootstrap', 'ngAnimate']
     
     $http.get('/api/user/'+$routeParams.id+'/wishlist/shared')
     .then(function(response){
-        if (response['data']['errors'] == null){
-            $scope.items = response['data']['wishes'];
-            $scope.name = response['data']['user']['name'];
-            $scope.closeAlert = function(index) {$scope.alerts.splice(index, 1);};
+        if (response['data']['data']['errors'] == null){
+            $scope.items = response['data']['data']['wishes'];
+            $scope.name = response['data']['data']['user']['name'];
         }else{
-            
+            $location.path('/');    
         }
-            $location.path('/');   
         });
 });
